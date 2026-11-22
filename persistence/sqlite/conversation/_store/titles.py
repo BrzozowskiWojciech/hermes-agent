@@ -68,6 +68,31 @@ def _is_compression_ancestor(holder: StoreHolder, conn, *, ancestor_id: str, des
             """, (descendant_id, ancestor_id, descendant_id)).fetchone() is not None
 
 
+def _has_canonical_bot_chat_ancestor(holder: StoreHolder, conn, session_id: str) -> bool:
+    """True if *session_id* is a compression continuation of a hidden canonical Bot Chat.
+    Excludes visible branch/delegate children via ``_COMPRESSION_CHILD_SQL`` +
+    ``_non_continuation_child_sql``."""
+    if not session_id:
+        return False
+    edge = _COMPRESSION_CHILD_SQL.format(a="child") + _non_continuation_child_sql("child.", "parent.id")
+    return conn.execute(f"""
+            WITH RECURSIVE ancestors(id) AS (
+                SELECT ?
+                UNION
+                SELECT parent.id
+                FROM ancestors a
+                JOIN sessions child ON child.id = a.id
+                JOIN sessions parent ON parent.id = child.parent_session_id
+                WHERE {edge}
+            )
+            SELECT 1
+            FROM ancestors a
+            JOIN sessions s ON s.id = a.id
+            WHERE a.id != ? AND s.hidden = 1 AND s.title = ?
+            LIMIT 1
+            """, (session_id, session_id, CANONICAL_BOT_CHAT_TITLE)).fetchone() is not None
+
+
 def _set_session_title(holder: StoreHolder, session_id: str, title: str, *, source: str) -> bool:
     """Write a title, enforcing provenance precedence. A ``user`` write always lands;
     ``derived``/``llm`` land only when the row is untitled or holds strictly lower
@@ -96,8 +121,14 @@ def _set_session_title_in_transaction(holder: StoreHolder, conn, session_id: str
     # exact-title lookup on every open), so a rename orphans the conversation. Hidden
     # is the discriminator: canonical chats are born hidden; a visible session merely
     # named "Bot Chat" stays renameable. Provenance-blind.
-    if ((current["title"] or "") == CANONICAL_BOT_CHAT_TITLE and bool(current["hidden"])
-            and title != CANONICAL_BOT_CHAT_TITLE):
+    is_canonical_bot_chat = (
+        bool(current["hidden"])
+        and (
+            (current["title"] or "") == CANONICAL_BOT_CHAT_TITLE
+            or _has_canonical_bot_chat_ancestor(holder, conn, session_id)
+        )
+    )
+    if is_canonical_bot_chat and title != CANONICAL_BOT_CHAT_TITLE:
         if is_user:
             raise ValueError("This is the bot's canonical Bot Chat — its name is its "
                              "identity, and renaming it would orphan the conversation. "

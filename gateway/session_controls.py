@@ -625,11 +625,20 @@ class AuthorityConnection:
             if found is None:
                 return {'sessions': [], 'scope': 'stored'}
             store = authority_persistence(self.authority)
-            row = store.sessions.get(found.session_id)
-            root = store.sessions.get(store.sessions.resolve_by_title(params['title']) or found.session_id) or row
+            root_id = store.sessions.resolve_by_title(params['title']) or found.session_id
+            root = store.sessions.get(root_id)
+            receipt = store.bindings.receipt(found.session_id)
+            tip_id = (
+                (receipt.current_target if receipt is not None and receipt.current_target else None)
+                or store.lineage.tip(root_id)
+                or found.session_id
+            )
+            row = store.sessions.get(tip_id) or store.sessions.get(found.session_id)
+            root = root or row
             return {'sessions': [{'session_id': found.session_id,
                                   'id': (root.session_id if root is not None else None) or found.session_id,
-                                  'resolved_id': found.session_id, 'title': (row.title if row is not None else None) or '',
+                                  'resolved_id': tip_id,
+                                  'title': (row.title if row is not None and row.title else (root.title if root is not None else None)) or '',
                                   'root_title': (root.title if root is not None else None) or '',
                                   'source': row.source if row is not None else None,
                                   'started_at': row.started_at if row is not None else None,
