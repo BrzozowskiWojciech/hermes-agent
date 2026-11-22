@@ -58,6 +58,7 @@
   "found": {"sha":"525b2bbfd02f5703253b260d2e1ac3af9c370e00"},
   "foundry": {"sha":"134692fa1be981972cccbf9bd32f3ed681b9c476","subdir":"foundry","choices":[[[["plugins.plugin_storage","plugin_data_dir","storage.py:55"]],[]],[[["plugins.plugin_storage","plugin_db","storage.py:78"]],[]]]},
   "fractal-memory-engine": {"sha":"cb005a5a132c196856d4171d626e273e2c38b1ef","choices":[[[["hermes_constants","get_hermes_home","memory_core.py:25"]],[]],[[["plugins.plugin_storage","plugin_data_dir","memory_core.py:40"]],[]],[[["hermes_constants","get_hermes_home","memory_core.py:47"]],[]]]},
+  "frame": {"sha":"99688c3dafd18e0aff6706ef83dbdc1cd22bd230","subdir":"hermes"},
   "freebusy": {"sha":"9436f9e683a55169df8e6233be18c64ba0e632c2","choices":[[[["plugins.plugin_storage","plugin_data_dir","__init__.py:55"]],[]],[[["gateway.session_context","get_session_env","freebusy/reminders.py:147"]],[]],[[["hermes_cli.config","load_config","freebusy/reminders.py:157"]],[]]]},
   "freeze": {"sha":"3e0d9a83857ab53937ce7b91aa7b3e10c1aae392","imports":[["tools.registry","discover_builtin_tools","freeze_core/cli.py:173"],["tools.registry","registry","freeze_core/cli.py:173"],["hermes_cli.config","load_config_readonly","freeze_core/cli.py:224"],["hermes_constants","get_hermes_home","freeze_core/cli.py:235"],["plugins.plugin_storage","plugin_data_dir","freeze_core/store.py:61"],["plugins.plugin_storage","plugin_db","freeze_core/store.py:70"]]},
   "freight-reconciliation": {"sha":"160ed80ddf6333e48f176f299322aaf9ed2414b0"},
